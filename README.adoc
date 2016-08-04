@@ -1,10 +1,12 @@
 = Spring Security and Angular
-Dave Syer, 2015
+Dave Syer, 2016
+@david_syer
 :backend: deckjs
 :deckjs_transition: fade
 :navigation:
 :menu:
 :status:
+:goto:
 :source-highlighter: pygments
 :deckjs_theme: spring
 :deckjsdir: ../deck.js
@@ -15,7 +17,21 @@ Dave Syer, 2015
 * Focus on features to build secure, modern, single-page applications
 * High level view of sample apps presented in http://spring.io/guides/tutorials/spring-security-and-angular-js/[tutorial] (from 
 https://spring.io/blog/2015/01/12/spring-and-angular-js-a-secure-single-page-application[blog series])
-* More detailed look at some of the apps
+* More detailed look at some features of the apps
+
+== Most Valuable Links
+
+[.lead]
+{nbsp}  +
+{nbsp}  +
+http://spring.io/guides/tutorials/spring-security-and-angular-js
+{nbsp}  +
+{nbsp}  +
+http://spring.io/guides/topicals/spring-security-architecture
+{nbsp}  +
+{nbsp}  +
+http://start.spring.io
+
 
 == Spring Security
 
@@ -93,8 +109,8 @@ image::images/angular/basic.png['Basic' Sample]
 angular.module('hello', [])
   .controller('home', function($http) {
     var self = this;
-    $http.get('/resource/').success(function(data) {
-      self.greeting = data;
+    $http.get('/resource/').then(function(response) {
+      self.greeting = response.data;
     })
   }
 );
@@ -109,7 +125,7 @@ With Spring Boot you get a secure application out of the box, but it is easy to 
 <dependency>
   <groupId>org.springframework.boot</groupId>
   <artifactId>spring-boot-starter-security</artifactId>
-/dependency>
+</dependency>
 ```
 
 or `build.gradle`
@@ -145,37 +161,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
 (c.f. "single": https://github.com/dsyer/spring-security-angular/tree/master/single[https://github.com/.../single], Part I)
 
-== Client Side Login Form
-
-```html
-<form role="form" ng-submit="controller.login()">
-  ...
-</form>
-```
-
-```javascript
-self.credentials = {};
-self.login = function() {
-
-  authenticate(self.credentials, function(authenticated) {
-
-    if (authenticated) {
-      console.log("Login succeeded")
-      ...            
-    } else {
-      console.log("Login failed")
-      ...
-    }
-
-  })
-
-}
-```
-
-* The `authenticate()` function sends HTTP Basic credentials and checks the "/user" endpoint.
-* Subsequent requests are authenticated by a cookie - standard Spring Security and browser behaviour
-
-== One More Thing
+== Suppress the Browser Dialog
 
 * When the browser gets a 401 with "WWW-Authenticate: Basic ..." it pops up a dialog. 
 * Spring Security sends that header unless it sees "X-Requested-With" in the request.
@@ -190,6 +176,33 @@ angular.module('hello', []).config(function($httpProvider) {
 })
 ...
 ```
+
+== Client Side Login Form
+
+```html
+<form role="form" ng-submit="controller.login()">
+  ...
+</form>
+```
+
+```javascript
+self.credentials = {};
+self.login = function() {
+
+  $http.get('/user', {
+      headers : { authorization : "Basic "
+        + btoa(self.credentials.username
+        + ":"  + self.credentials.password)
+      }}).then(function(response) {
+        self.greeting = response.data;
+        self.hide = true;
+  })
+
+}
+```
+
+* The `login()` function sends HTTP Basic credentials and checks the "/user" endpoint.
+* Subsequent requests are authenticated by a cookie - standard Spring Security and browser behaviour
 
 == Login Form Summary
 
@@ -232,8 +245,29 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         ...
       .and()
         .csrf()
-          csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
+          .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
     }
+
+}
+```
+
+== One Last Thing
+
+For a Single Page Application the default logout success handler
+doesn't make sense, so:
+
+```java
+
+@Configuration
+public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
+
+  @Override
+  protected void configure(HttpSecurity http) throws Exception {
+      http
+       ...
+       .and()
+         .logout().logoutSuccessUrl("/");
+  }
 
 }
 ```
@@ -243,6 +277,23 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 image::images/angular/vanilla.png['Vanilla' Sample]
 
 (c.f. "vanilla": https://github.com/dsyer/spring-security-angular/tree/master/vanilla[https://github.com/.../vanilla], Part III)
+
+== CORS
+
+Use `@CrossOrigin` on your `@RequestMapping` and this:
+
+```java
+public class ResourceApplication extends WebSecurityConfigurerAdapter {
+
+  @Override
+  protected void configure(HttpSecurity http) throws Exception {
+    http.cors()
+      ...
+  }
+```
+
+TIP: there is also `CorsUtils::isCorsRequest` method you can use in a
+request matcher.
 
 == Add Spring Session
 
@@ -318,9 +369,10 @@ Imagine several physical implementations of the same system with an identical Ja
 
 * http://presos.dsyer.com/decks/spring-security-angular.html
 * http://spring.io/guides/tutorials/spring-security-and-angular-js/
+* http://spring.io/guides/topicals/spring-security-architecture/
 * http://github.com/spring-guides/tut-spring-security-and-angular-js
 * http://github.com/spring-projects/spring-security-oauth
 * http://cloud.spring.io/spring-cloud-netflix (for `@EnableZuulProxy`)
-* Twitter: @david_syer  
+* Twitter: @david_syer
 * Email: dsyer@pivotal.io
 

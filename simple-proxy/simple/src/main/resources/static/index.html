@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<title>Demo</title>
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width" />
+<base href="/" />
+<link rel="stylesheet" type="text/css"
+	href="/webjars/bootstrap/css/bootstrap.min.css" />
+<script type="text/javascript" src="/webjars/jquery/jquery.min.js"></script>
+<script type="text/javascript"
+	src="/webjars/bootstrap/js/bootstrap.min.js"></script>
+</head>
+<body ng-app="app" ng-controller="home as home">
+	<div class="container">
+		<ul class="nav nav-pills" role="tablist">
+			<li class="active" ng-click="home.refresh()"><a href="">Home</a></li>
+			<li><a href="" ng-click="home.toggle()">Login</a></li>
+			<li><a href="" ng-click="home.logout()">Logout</a></li>
+		</ul>
+		<form ng-submit="home.login()" ng-show="home.show">
+			<div class="form-group">
+				<label for="username">Username:</label> <input type="text"
+					class="form-control" id="content" name="content"
+					ng-model="home.credentials.username" /> <label for="username">Password:</label>
+				<input type="password" class="form-control" id="content"
+					name="content" ng-model="home.credentials.password" />
+			</div>
+			<button type="submit" class="btn btn-primary">Submit</button>
+		</form>
+	</div>
+	<div class="container">
+		<p>The ID is: {{home.greeting.id}}</p>
+		<p>The content is: {{home.greeting.msg}}</p>
+	</div>
+	<script type="text/javascript" src="/webjars/angularjs/angular.min.js"></script>
+	<script type="text/javascript">
+		angular
+				.module("app", [])
+				.config(
+						function($httpProvider) {
+							$httpProvider.defaults.headers.common["X-Requested-With"] = 'XMLHttpRequest';
+						})
+				.controller(
+						"home",
+						function($http) {
+							var self = this;
+							self.show = true;
+							self.credentials = {};
+							self.toggle = function() {
+								self.show = !self.show;
+							};
+							self.logout = function() {
+								$http.post("/logout").then(function() {
+									self.credentials = {};
+									self.show = true;
+								});
+							};
+							self.login = function() {
+
+								$http
+										.get(
+												'/greeting',
+												{
+													headers : {
+														authorization : "Basic "
+																+ btoa(self.credentials.username
+																		+ ":"
+																		+ self.credentials.password)
+													}
+												}).then(function(response) {
+											self.greeting = response.data;
+											self.show = false;
+										})
+
+							};
+							self.refresh = function() {
+								$http.get("/greeting").then(function(response) {
+									self.greeting = response.data;
+								});
+							}
+						});
+	</script>
+</body>
+</html>
