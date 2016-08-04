@@ -55,7 +55,7 @@ http://start.spring.io
 * X.509 authentication
 * Kerberos
 * Cookies
-* CORS (Common Origin Resource Sharing)
+* CORS (Cross Origin Resource Sharing)
 * HSTS (HTTP Strict Transport Security)
 * CSP (Content Security Policy)
 
