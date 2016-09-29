@@ -17,21 +17,11 @@
 	<div class="container">
 		<ul class="nav nav-pills" role="tablist">
 			<li class="active" ng-click="home.refresh()"><a href="">Home</a></li>
-			<li><a href="" ng-click="home.toggle()">Login</a></li>
+			<li><a href="/login">Login</a></li>
 			<li><a href="" ng-click="home.logout()">Logout</a></li>
 		</ul>
-		<form ng-submit="home.login()" ng-show="home.show">
-			<div class="form-group">
-				<label for="username">Username:</label> <input type="text"
-					class="form-control" id="content" name="content"
-					ng-model="home.credentials.username" /> <label for="username">Password:</label>
-				<input type="password" class="form-control" id="content"
-					name="content" ng-model="home.credentials.password" />
-			</div>
-			<button type="submit" class="btn btn-primary">Submit</button>
-		</form>
 	</div>
-	<div class="container">
+	<div class="container" ng-hide="home.show">
 		<p>The ID is: {{home.greeting.id}}</p>
 		<p>The content is: {{home.greeting.msg}}</p>
 	</div>
@@ -58,24 +48,10 @@
 									self.show = true;
 								});
 							};
-							self.login = function() {
-
-								$http
-										.get(
-												'/greeting',
-												{
-													headers : {
-														authorization : "Basic "
-																+ btoa(self.credentials.username
-																		+ ":"
-																		+ self.credentials.password)
-													}
-												}).then(function(response) {
-											self.greeting = response.data;
-											self.show = false;
-										})
-
-							};
+							$http.get('/greeting').then(function(response) {
+								self.greeting = response.data;
+								self.show = false;
+							});
 							self.refresh = function() {
 								$http.get("/greeting").then(function(response) {
 									self.greeting = response.data;
